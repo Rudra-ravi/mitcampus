@@ -1,0 +1,43 @@
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    
+    // FlutterFire Configuration
+    id 'com.google.gms.google-services' // For Firebase integration
+    // Flutter plugin (ensure this is applied last)
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+android {
+    namespace = "com.example.mitcampus"
+    compileSdkVersion flutter.compileSdkVersion
+    ndkVersion = "25.1.8937393"
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    defaultConfig {
+        applicationId = "com.example.mitcampus"
+        minSdk = 33 
+        targetSdk = 34 // Update with the current target SDK version
+        versionCode = 1
+        versionName = "1.0.0"
+    }
+
+    lintOptions {
+        disable 'Deprecation'
+    }
+}
+
+flutter {
+    source = "../.." // This points to the Flutter module location
+}
+
+// FlutterFire Configuration - Google Services (Firebase)
+apply plugin: 'com.google.gms.google-services'

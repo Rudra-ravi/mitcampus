@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "56265206453",
+    "project_id": "mitcampus-ab3db",
+    "storage_bucket": "mitcampus-ab3db.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:56265206453:android:2fe439ba7f9225ad522cfc",
+        "android_client_info": {
+          "package_name": "com.example.mitcampus"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC5-aL1sUkn_hjlEfY4b_ft76AacxlQUuo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:56265206453:android:d3e44a42fa0d2536522cfc",
+        "android_client_info": {
+          "package_name": "com.mvit.mitcampus"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC5-aL1sUkn_hjlEfY4b_ft76AacxlQUuo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
