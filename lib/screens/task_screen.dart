@@ -4,7 +4,7 @@ import 'package:mitcampus/blocs/task_bloc.dart';
 import 'package:mitcampus/models/task.dart';
 
 class TaskScreen extends StatelessWidget {
-  const TaskScreen({Key? key}) : super(key: key);
+  const TaskScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +45,7 @@ class TaskScreen extends StatelessWidget {
 class TaskListItem extends StatelessWidget {
   final Task task;
 
-  const TaskListItem({Key? key, required this.task}) : super(key: key);
+  const TaskListItem({super.key, required this.task});
 
   @override
   Widget build(BuildContext context) {

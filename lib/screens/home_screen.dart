@@ -17,8 +17,7 @@ class HomeScreen extends StatelessWidget {
         if (state is AuthSuccess) {
           return _buildHomeContent(context, state.user);
         } else {
-          // Handle other states (e.g., AuthInitial, AuthFailure)
-          return  LoginScreen(); // Redirect to login screen or show appropriate widget
+          return LoginScreen();
         }
       },
     );
@@ -27,10 +26,15 @@ class HomeScreen extends StatelessWidget {
   Widget _buildHomeContent(BuildContext context, User user) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('MIT Campus'),
+        leading: const Icon(Icons.school, color: Color(0xFFFFFFFF)),
+        title: const Text('MIT Campus',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Color(0xFFFFFFFF))),
+        backgroundColor: const Color(0xFF2563EB), // Changed to Royal Blue
+        elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: const Icon(Icons.settings, color: Color(0xFFFFFFFF)),
             onPressed: () {
               Navigator.push(
                 context,
@@ -45,7 +49,7 @@ class HomeScreen extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+            colors: [Color(0xFF2563EB), Color(0xFF0EA5E9)],
           ),
         ),
         child: Padding(
@@ -53,16 +57,11 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ShaderMask(
-                shaderCallback: (bounds) => const LinearGradient(
-                  colors: [Colors.purple, Colors.blue],
-                ).createShader(bounds),
-                child: Text(
-                  'Welcome, ${user.displayName ?? 'User'}!',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+              Text(
+                'Welcome, ${user.displayName ?? 'User'}!',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: const Color(0xFF1F2937), // Dark Gray
+                  fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 24),
@@ -74,13 +73,20 @@ class HomeScreen extends StatelessWidget {
                   );
                 },
                 child: Container(
-                  height: 200,
+                  height: 160,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
-                    color: Colors.white.withOpacity(0.2),
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color.fromARGB(255, 148, 173, 226), // Royal Blue
+                        Color.fromARGB(255, 184, 199, 230), // Light Blue
+                      ],
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withOpacity(0.2),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
@@ -90,9 +96,9 @@ class HomeScreen extends StatelessWidget {
                     child: Text(
                       'ECE Department',
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        color: const Color(0xFF2563EB), // Royal Blue
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),

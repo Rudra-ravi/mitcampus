@@ -10,10 +10,12 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -22,7 +24,17 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'MIT Campus App',
         theme: ThemeData(
-          primarySwatch: Colors.blue,
+          primaryColor: const Color(0xFF2563EB),
+          scaffoldBackgroundColor: Colors.white,
+          colorScheme: ColorScheme.fromSwatch().copyWith(
+            primary: const Color(0xFF2563EB),
+            secondary: const Color(0xFFF3F4F6),
+            error: const Color(0xFFDC2626),
+          ),
+          textTheme: Theme.of(context).textTheme.apply(
+            bodyColor: const Color(0xFF1F2937),
+            displayColor: const Color(0xFF1F2937),
+          ),
         ),
         home: const HomeScreen(),
       ),

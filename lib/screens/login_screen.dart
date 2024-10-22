@@ -22,7 +22,7 @@ class LoginScreen extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.error),
-                backgroundColor: Colors.red,
+                backgroundColor: const Color(0xFFDC2626),
               ),
             );
           }
@@ -33,10 +33,7 @@ class LoginScreen extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF6A11CB),
-                  Color(0xFF2575FC),
-                ],
+                colors: [Color(0xFF2563EB), Color(0xFF0EA5E9)],
               ),
             ),
             child: SafeArea(
@@ -48,10 +45,10 @@ class LoginScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Icon(
-                          Icons.lock_outline,
-                          size: 80,
-                          color: Colors.white,
+                        Image.asset(
+                          'assets/img/login.png',
+                          height: 250,
+                          width: 250,
                         ),
                         const SizedBox(height: 48),
                         const Text(
@@ -89,7 +86,7 @@ class LoginScreen extends StatelessWidget {
                                   );
                                 },
                           style: ElevatedButton.styleFrom(
-                            foregroundColor: const Color(0xFF6A11CB),
+                            foregroundColor: const Color(0xFF2563EB),
                             backgroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             textStyle: const TextStyle(
@@ -101,7 +98,7 @@ class LoginScreen extends StatelessWidget {
                             ),
                           ),
                           child: state is AuthLoading
-                              ? const CircularProgressIndicator(color: Colors.white)
+                              ? const CircularProgressIndicator(color: Color(0xFF2563EB))
                               : const Text('Login'),
                         ),
                       ],

@@ -7,7 +7,7 @@ import '../states/settings_state.dart';
 import 'login_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({Key? key}) : super(key: key);
+  const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,18 +17,23 @@ class SettingsScreen extends StatelessWidget {
         listener: (context, state) {
           if (state is SettingsError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: const Color(0xFFDC2626),
+              ),
             );
           } else if (state is ShowAboutDialogState) {
             showDialog(
               context: context,
               builder: (BuildContext context) {
                 return AlertDialog(
-                  title: const Text('About'),
-                  content: Text('${state.developerInfo}\n\n${state.version}'),
+                  title: const Text('About', style: TextStyle(color: Color(0xFF2563EB))),
+                  content: Text('${state.developerInfo}\n\n${state.version}',
+                    style: const TextStyle(color: Color(0xFF1F2937))),
+                  backgroundColor: Colors.white,
                   actions: <Widget>[
                     TextButton(
-                      child: const Text('Close'),
+                      child: const Text('Close', style: TextStyle(color: Color(0xFF0EA5E9))),
                       onPressed: () {
                         Navigator.of(context).pop();
                       },
@@ -42,13 +47,15 @@ class SettingsScreen extends StatelessWidget {
         builder: (context, state) {
           return Scaffold(
             appBar: AppBar(
-              title: const Text('Settings'),
+              title: const Text('Settings', style: TextStyle(color: Color(0xFF1F2937))),
+              backgroundColor: Colors.white,
+              iconTheme: const IconThemeData(color: Color(0xFF1F2937)),
             ),
             body: ListView(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.logout),
-                  title: const Text('Logout'),
+                  leading: const Icon(Icons.logout, color: Color(0xFF2563EB)),
+                  title: const Text('Logout', style: TextStyle(color: Color(0xFF1F2937))),
                   onTap: () {
                     BlocProvider.of<AuthBloc>(context).add(LogoutEvent());
                     Navigator.of(context).pushAndRemoveUntil(
@@ -58,14 +65,15 @@ class SettingsScreen extends StatelessWidget {
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.info),
-                  title: const Text('About'),
+                  leading: const Icon(Icons.info, color: Color(0xFF2563EB)),
+                  title: const Text('About', style: TextStyle(color: Color(0xFF1F2937))),
                   onTap: () {
                     context.read<SettingsBloc>().add(ShowAboutDialog(context: context));
                   },
                 ),
               ],
             ),
+            backgroundColor: Colors.white,
           );
         },
       ),
