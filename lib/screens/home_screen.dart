@@ -57,13 +57,6 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Welcome, ${user.displayName ?? 'User'}!',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: const Color(0xFF1F2937), // Dark Gray
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
               const SizedBox(height: 24),
               GestureDetector(
                 onTap: () {

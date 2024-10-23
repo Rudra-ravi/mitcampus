@@ -41,3 +41,10 @@ flutter {
 
 // FlutterFire Configuration - Google Services (Firebase)
 apply plugin: 'com.google.gms.google-services'
+
+dependencies {
+    implementation platform('com.google.firebase:firebase-bom:32.7.0')
+    implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.firebase:firebase-firestore'
+    implementation 'com.google.android.gms:play-services-base:18.2.0'
+}
