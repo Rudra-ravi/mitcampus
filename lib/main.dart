@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+// ignore: unused_import
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -8,18 +9,12 @@ import 'package:mitcampus/blocs/connectivity_bloc.dart';
 import 'package:mitcampus/firebase_options.dart';
 import 'package:mitcampus/screens/home_screen.dart';
 import 'blocs/chat_bloc.dart';
+import 'blocs/task_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
-  // Enable offline persistence with a larger cache size
-  FirebaseFirestore.instance.settings = const Settings(
-    persistenceEnabled: true,
-    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
   
   runApp(const MyApp());
@@ -32,6 +27,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider<TaskBloc>(
+          create: (context) => TaskBloc()..add(LoadTasksEvent()),
+        ),
         BlocProvider(
           create: (context) => AuthBloc()..add(CheckAuthStatusEvent()),
         ),

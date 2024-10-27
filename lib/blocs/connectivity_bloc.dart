@@ -6,7 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 abstract class ConnectivityEvent {}
 class CheckConnectivity extends ConnectivityEvent {}
 class ConnectivityChanged extends ConnectivityEvent {
-  final ConnectivityResult result;
+  final List<ConnectivityResult> result;
   ConnectivityChanged(this.result);
 }
 
@@ -22,25 +22,25 @@ class ConnectivityBloc extends Bloc<ConnectivityEvent, ConnectivityState> {
 
   ConnectivityBloc(this.connectivity) : super(ConnectivityInitial()) {
     on<CheckConnectivity>((event, emit) async {
-      final result = await connectivity.checkConnectivity();
-      if (result != ConnectivityResult.none) {
-        emit(ConnectivityOnline());
-      } else {
+      final results = await connectivity.checkConnectivity();
+      if (results.contains(ConnectivityResult.none) || results.isEmpty) {
         emit(ConnectivityOffline());
+      } else {
+        emit(ConnectivityOnline());
       }
     });
 
     on<ConnectivityChanged>((event, emit) {
-      if (event.result != ConnectivityResult.none) {
-        emit(ConnectivityOnline());
-      } else {
+      if (event.result.contains(ConnectivityResult.none) || event.result.isEmpty) {
         emit(ConnectivityOffline());
+      } else {
+        emit(ConnectivityOnline());
       }
     });
 
     // Listen to connectivity changes
     connectivitySubscription = connectivity.onConnectivityChanged.listen(
-      (result) => add(ConnectivityChanged(result as ConnectivityResult)),
+      (result) => add(ConnectivityChanged([result as ConnectivityResult])),
     );
   }
 

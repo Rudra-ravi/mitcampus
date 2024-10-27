@@ -3,10 +3,18 @@ import 'package:mitcampus/models/task.dart';
 
 class TaskRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final String _collection = 'tasks';
 
   Future<List<Task>> getTasks() async {
-    final snapshot = await _firestore.collection('tasks').get();
-    return snapshot.docs.map((doc) => Task.fromFirestore(doc)).toList();
+    try {
+      final snapshot = await _firestore
+          .collection(_collection)
+          .orderBy('deadline')
+          .get();
+      return snapshot.docs.map((doc) => Task.fromFirestore(doc)).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch tasks: $e');
+    }
   }
 
   Future<void> updateTask(Task task) async {
@@ -14,10 +22,13 @@ class TaskRepository {
   }
 
   Future<Task> createTask(Task task) async {
-    final docRef = await _firestore.collection('tasks').add(task.toFirestore());
-    final newTask = task.copyWith(id: docRef.id);
-    await docRef.update({'id': docRef.id});
-    return newTask;
+    try {
+      final docRef = await _firestore.collection(_collection).add(task.toFirestore());
+      final docSnapshot = await docRef.get();
+      return Task.fromFirestore(docSnapshot);
+    } catch (e) {
+      throw Exception('Failed to create task: $e');
+    }
   }
 
   Future<void> deleteTask(String taskId) async {

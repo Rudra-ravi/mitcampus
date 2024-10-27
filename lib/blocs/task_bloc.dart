@@ -41,6 +41,11 @@ class TasksLoaded extends TaskState {
   TasksLoaded(this.tasks, this.currentUser);
 }
 
+class TaskError extends TaskState {
+  final String message;
+  TaskError(this.message);
+}
+
 class TaskBloc extends Bloc<TaskEvent, TaskState> {
   final TaskRepository _taskRepository = TaskRepository();
   final UserRepository _userRepository = UserRepository();
@@ -53,7 +58,7 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
         final currentUser = await _userRepository.getCurrentUser();
         emit(TasksLoaded(tasks, currentUser));
       } catch (e) {
-        // Handle error
+        emit(TaskError('Failed to load tasks: $e'));
       }
     });
 
@@ -67,11 +72,17 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
     });
 
     on<CreateTaskEvent>((event, emit) async {
-      if (state is TasksLoaded) {
-        final currentState = state as TasksLoaded;
+      try {
         await _taskRepository.createTask(event.task);
         final updatedTasks = await _taskRepository.getTasks();
-        emit(TasksLoaded(updatedTasks, currentState.currentUser));
+        final currentUser = await _userRepository.getCurrentUser();
+        emit(TasksLoaded(updatedTasks, currentUser));
+      } catch (e) {
+        emit(TaskError('Failed to create task: $e'));
+        // Emit the previous state after error
+        if (state is TasksLoaded) {
+          emit(state);
+        }
       }
     });
 

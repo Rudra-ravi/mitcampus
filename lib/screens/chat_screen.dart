@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mitcampus/models/chat_message.dart';
 import '../blocs/chat_bloc.dart';
 import '../blocs/auth_bloc.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -25,85 +24,88 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, authState) {
-        if (authState is! AuthSuccess) {
-          return const Center(child: Text('Please login to access chat'));
-        }
-
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Chat',
-                style: TextStyle(color: Colors.white)),
-            backgroundColor: const Color(0xFF2563EB),
-            iconTheme: const IconThemeData(color: Colors.white),
-          ),
-          body: BlocBuilder<ChatBloc, ChatState>(
-            builder: (context, state) {
-              if (state is ChatLoading) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (state is ChatLoaded) {
-                return Column(
-                  children: [
-                    Expanded(
-                      child: state.messages.isEmpty
-                          ? const Center(child: Text('No messages yet'))
-                          : ListView.builder(
-                              reverse: true,
-                              itemCount: state.messages.length,
-                              itemBuilder: (context, index) {
-                                final message = state.messages[index];
-                                final isMe = message.senderId == _authState.user.uid;
-
-                                return _buildMessageBubble(message, isMe);
-                              },
-                            ),
-                    ),
-                    _buildMessageInput(_authState.user.uid),
-                  ],
-                );
-              } else if (state is ChatError) {
-                return Center(child: Text('Error: ${state.error}'));
-              }
-              return const Center(child: Text('No messages'));
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildMessageInput(String userId) {
-    return Container(
-      padding: const EdgeInsets.all(8.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
-            spreadRadius: 1,
-            blurRadius: 5,
-          ),
-        ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Chat',
+            style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color(0xFF2563EB),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _messageController,
-              decoration: const InputDecoration(
-                hintText: 'Type a message...',
-                border: InputBorder.none,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF2563EB), Color(0xFF0EA5E9)],
+          ),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: BlocBuilder<ChatBloc, ChatState>(
+                builder: (context, state) {
+                  if (state is ChatLoading) {
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    );
+                  } else if (state is ChatLoaded) {
+                    return state.messages.isEmpty
+                        ? const Center(
+                            child: Text('No messages yet',
+                              style: TextStyle(color: Colors.white, fontSize: 16)))
+                        : ListView.builder(
+                            reverse: true,
+                            padding: const EdgeInsets.all(16),
+                            itemCount: state.messages.length,
+                            itemBuilder: (context, index) {
+                              final message = state.messages[index];
+                              final isMe = message.senderId == _authState.user.uid;
+                              return _buildMessageBubble(message, isMe);
+                            },
+                          );
+                  }
+                  return const Center(
+                    child: Text('Error loading messages',
+                      style: TextStyle(color: Colors.white, fontSize: 16)),
+                  );
+                },
               ),
-              onSubmitted: (text) => _sendMessage(userId),
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.send),
-            color: const Color(0xFF2563EB),
-            onPressed: () => _sendMessage(userId),
-          ),
-        ],
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _messageController,
+                      decoration: InputDecoration(
+                        hintText: 'Type a message...',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[100],
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 10,
+                        ),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.send),
+                    color: const Color(0xFF2563EB),
+                    onPressed: () => _sendMessage(_authState.user.uid),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -138,12 +140,6 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
-  Future<void> _launchUrl(String urlString) async {
-    final Uri url = Uri.parse(urlString);
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      throw Exception('Could not launch $urlString');
-    }
-  }
 
   Widget _buildMessageBubble(ChatMessage message, bool isMe) {
     return Padding(

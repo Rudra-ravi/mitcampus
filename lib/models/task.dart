@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Task {
-  final String id;
+  final String? id;
   final String title;
   final DateTime deadline;
   final bool isCompleted;
@@ -10,7 +10,7 @@ class Task {
   final List<Comment> comments;
 
   Task({
-    required this.id,
+    this.id,
     required this.title,
     required this.deadline,
     this.isCompleted = false,
@@ -43,12 +43,12 @@ class Task {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     return Task(
       id: doc.id,
-      title: data['title'],
+      title: data['title'] ?? '',
       deadline: (data['deadline'] as Timestamp).toDate(),
-      isCompleted: data['isCompleted'],
+      isCompleted: data['isCompleted'] ?? false,
       description: data['description'],
-      assignedUsers: List<String>.from(data['assignedUsers']),
-      comments: (data['comments'] as List<dynamic>)
+      assignedUsers: List<String>.from(data['assignedUsers'] ?? []),
+      comments: (data['comments'] as List<dynamic>? ?? [])
           .map((comment) => Comment.fromMap(comment))
           .toList(),
     );

@@ -37,7 +37,7 @@ class TaskDetailScreen extends StatelessWidget {
           const Text('Comments:', style: TextStyle(fontWeight: FontWeight.bold)),
           ...task.comments.map((comment) => CommentWidget(comment: comment)),
           const SizedBox(height: 16),
-          AddCommentWidget(taskId: task.id),
+          AddCommentWidget(taskId: task.id ?? ''),
         ],
       ),
     );
@@ -64,10 +64,10 @@ class AddCommentWidget extends StatefulWidget {
   const AddCommentWidget({super.key, required this.taskId});
 
   @override
-  _AddCommentWidgetState createState() => _AddCommentWidgetState();
+  AddCommentWidgetState createState() => AddCommentWidgetState();
 }
 
-class _AddCommentWidgetState extends State<AddCommentWidget> {
+class AddCommentWidgetState extends State<AddCommentWidget> {
   final _commentController = TextEditingController();
 
   @override
