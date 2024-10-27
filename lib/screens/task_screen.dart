@@ -57,17 +57,20 @@ class TaskScreen extends StatelessWidget {
             },
           ),
         ),
-        floatingActionButton: BlocBuilder<TaskBloc, TaskState>(
-          builder: (context, state) {
-            if (state is TasksLoaded && state.currentUser.isHOD) {
-              return FloatingActionButton(
-                onPressed: () => _navigateToCreateTask(context),
-          backgroundColor: const Color(0xFF2563EB),
-          child: const Icon(Icons.chat, color: Colors.white),
-              );
-            }
-            return const SizedBox.shrink();
-          },
+        floatingActionButton: Padding(
+          padding: const EdgeInsets.only(bottom: 16.0),
+          child: BlocBuilder<TaskBloc, TaskState>(
+            builder: (context, state) {
+              if (state is TasksLoaded && state.currentUser.isHOD) {
+                return FloatingActionButton(
+                  onPressed: () => _navigateToCreateTask(context),
+                  backgroundColor: const Color(0xFF2563EB),
+                  child: const Icon(Icons.add, color: Colors.white),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
         ),
       ),
     );
