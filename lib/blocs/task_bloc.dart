@@ -73,16 +73,18 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
 
     on<CreateTaskEvent>((event, emit) async {
       try {
+        emit(TasksLoading()); // Add loading state
         await _taskRepository.createTask(event.task);
         final updatedTasks = await _taskRepository.getTasks();
         final currentUser = await _userRepository.getCurrentUser();
         emit(TasksLoaded(updatedTasks, currentUser));
       } catch (e) {
         emit(TaskError('Failed to create task: $e'));
-        // Emit the previous state after error
-        if (state is TasksLoaded) {
-          emit(state);
-        }
+        await Future.delayed(const Duration(seconds: 2)); // Show error briefly
+        // Reload the tasks instead of emitting previous state
+        final tasks = await _taskRepository.getTasks();
+        final currentUser = await _userRepository.getCurrentUser();
+        emit(TasksLoaded(tasks, currentUser));
       }
     });
 

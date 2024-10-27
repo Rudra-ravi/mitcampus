@@ -24,7 +24,13 @@ class TaskRepository {
   Future<Task> createTask(Task task) async {
     try {
       final docRef = await _firestore.collection(_collection).add(task.toFirestore());
+      
+      // Fetch the created document to return the complete task with ID
       final docSnapshot = await docRef.get();
+      if (!docSnapshot.exists) {
+        throw Exception('Failed to create task: Document does not exist after creation');
+      }
+      
       return Task.fromFirestore(docSnapshot);
     } catch (e) {
       throw Exception('Failed to create task: $e');

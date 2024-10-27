@@ -114,14 +114,16 @@ class _ChatScreenState extends State<ChatScreen> {
     if (_messageController.text.isNotEmpty) {
       if (_authState is AuthSuccess) {
         final authState = _authState as AuthSuccess;
+        final displayName = authState.user.displayName ?? authState.user.email?.split('@')[0] ?? 'Anonymous';
+        
         context.read<ChatBloc>().add(
-              SendMessageEvent(
-                message: _messageController.text,
-                senderId: userId,
-                senderName: authState.user.displayName ?? 'Anonymous',
-                timestamp: DateTime.now(),
-              ),
-            );
+          SendMessageEvent(
+            message: _messageController.text,
+            senderId: userId,
+            senderName: displayName,
+            timestamp: DateTime.now(),
+          ),
+        );
         _messageController.clear();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -259,9 +259,6 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
         
         context.read<TaskBloc>().add(CreateTaskEvent(newTask));
         
-        // Wait for a short moment to ensure the task is created
-        await Future.delayed(const Duration(milliseconds: 500));
-        
         if (mounted) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(

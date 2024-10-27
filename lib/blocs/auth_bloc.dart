@@ -55,6 +55,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         email: event.email,
         password: event.password,
       );
+      
+      // Set display name if not already set
+      if (userCredential.user != null && userCredential.user!.displayName == null) {
+        await userCredential.user!.updateDisplayName(
+          userCredential.user!.email?.split('@')[0] ?? 'User'
+        );
+      }
+      
       await _saveAuthStatus(true);
       emit(AuthSuccess(user: userCredential.user!));
     } catch (e) {
