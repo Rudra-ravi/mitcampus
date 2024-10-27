@@ -7,6 +7,7 @@ import 'package:mitcampus/blocs/auth_bloc.dart';
 import 'package:mitcampus/blocs/connectivity_bloc.dart';
 import 'package:mitcampus/firebase_options.dart';
 import 'package:mitcampus/screens/home_screen.dart';
+import 'blocs/chat_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,6 +38,9 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (context) => ConnectivityBloc(Connectivity()),
         ),
+        BlocProvider<ChatBloc>(
+          create: (context) => ChatBloc(),
+        ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -50,11 +54,9 @@ class MyApp extends StatelessWidget {
             error: const Color(0xFFDC2626),
             // Add more colors for settings page
             surface: const Color(0xFFFFFFFF),
-            background: const Color(0xFFF9FAFB),
             onPrimary: const Color(0xFFFFFFFF),
             onSecondary: const Color(0xFF1F2937),
             onSurface: const Color(0xFF1F2937),
-            onBackground: const Color(0xFF6B7280),
           ),
           textTheme: Theme.of(context).textTheme.apply(
             bodyColor: const Color(0xFF1F2937),
@@ -72,14 +74,14 @@ class MyApp extends StatelessWidget {
             iconColor: Color(0xFF2563EB),
           ),
           switchTheme: SwitchThemeData(
-            thumbColor: MaterialStateProperty.resolveWith((states) {
-              if (states.contains(MaterialState.selected)) {
+            thumbColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
                 return const Color(0xFF2563EB);
               }
               return const Color(0xFF9CA3AF);
             }),
-            trackColor: MaterialStateProperty.resolveWith((states) {
-              if (states.contains(MaterialState.selected)) {
+            trackColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
                 return const Color(0xFFBFDBFE);
               }
               return const Color(0xFFE5E7EB);

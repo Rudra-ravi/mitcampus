@@ -17,13 +17,16 @@ class LogoutEvent extends AuthEvent {}
 class CheckAuthStatusEvent extends AuthEvent {}
 
 // States
-abstract class AuthState {}
+abstract class AuthState {
+  get user => null;
+}
 
 class AuthInitial extends AuthState {}
 
 class AuthLoading extends AuthState {}
 
 class AuthSuccess extends AuthState {
+  @override
   final User user;
 
   AuthSuccess({required this.user});

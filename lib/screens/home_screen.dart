@@ -5,6 +5,7 @@ import '../blocs/auth_bloc.dart';
 import 'task_screen.dart';
 import 'settings_screen.dart';
 import 'login_screen.dart';
+import 'chat_screen.dart';
 
 
 class HomeScreen extends StatelessWidget {
@@ -98,6 +99,19 @@ class HomeScreen extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 16.0),
+        child: FloatingActionButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ChatScreen()),
+            );
+          },
+          backgroundColor: const Color(0xFF2563EB),
+          child: const Icon(Icons.chat, color: Colors.white),
         ),
       ),
     );

@@ -16,21 +16,29 @@ class TaskScreen extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Tasks', style: TextStyle(color: Colors.white)),
           backgroundColor: const Color(0xFF2563EB),
+          iconTheme: const IconThemeData(color: Colors.white), 
         ),
         body: BlocBuilder<TaskBloc, TaskState>(
           builder: (context, state) {
-            if (state is TasksLoaded) {
-              return ListView.builder(
-                itemCount: state.tasks.length,
-                itemBuilder: (context, index) {
-                  final task = state.tasks[index];
-                  return TaskListItem(task: task, isHOD: state.currentUser.isHOD);
-                },
-              );
-            } else if (state is TasksLoading) {
+            if (state is TasksLoading) {
               return const Center(child: CircularProgressIndicator());
+            } else if (state is TasksLoaded) {
+              return state.tasks.isEmpty
+                  ? const Center(child: Text('No tasks available'))
+                  : ListView.builder(
+                      itemCount: state.tasks.length,
+                      itemBuilder: (context, index) {
+                        final task = state.tasks[index];
+                        return TaskListItem(
+                          task: task,
+                          isHOD: state.currentUser.isHOD,
+                        );
+                      },
+                    );
             } else {
-              return const Center(child: Text('Error loading tasks'));
+              return const Center(
+                child: Text('Error loading tasks. Please try again later.'),
+              );
             }
           },
         ),
@@ -38,12 +46,7 @@ class TaskScreen extends StatelessWidget {
           builder: (context, state) {
             if (state is TasksLoaded && state.currentUser.isHOD) {
               return FloatingActionButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const CreateTaskScreen()),
-                  );
-                },
+                onPressed: () => _navigateToCreateTask(context),
                 backgroundColor: const Color(0xFF2563EB),
                 child: const Icon(Icons.add, color: Colors.white),
               );
@@ -54,33 +57,64 @@ class TaskScreen extends StatelessWidget {
       ),
     );
   }
+
+  void _navigateToCreateTask(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const CreateTaskScreen()),
+    );
+  }
 }
 
 class TaskListItem extends StatelessWidget {
   final Task task;
   final bool isHOD;
 
-  const TaskListItem({super.key, required this.task, required this.isHOD});
+  const TaskListItem({
+    super.key,
+    required this.task,
+    required this.isHOD,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: ListTile(
-        title: Text(task.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text('Deadline: ${task.deadline.toString().split(' ')[0]}'),
+        title: Text(
+          task.title,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Deadline: ${_formatDate(task.deadline)}'),
+            Text(
+              'Status: ${task.isCompleted ? "Completed" : "Pending"}',
+              style: TextStyle(
+                color: task.isCompleted ? Colors.green : Colors.orange,
+              ),
+            ),
+          ],
+        ),
         trailing: Icon(
           task.isCompleted ? Icons.check_circle : Icons.circle_outlined,
           color: task.isCompleted ? Colors.green : Colors.grey,
         ),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TaskDetailScreen(task: task, isHOD: isHOD),
-            ),
-          );
-        },
+        onTap: () => _navigateToTaskDetail(context),
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
+  void _navigateToTaskDetail(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TaskDetailScreen(task: task, isHOD: isHOD),
       ),
     );
   }
