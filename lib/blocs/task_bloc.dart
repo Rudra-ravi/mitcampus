@@ -30,6 +30,13 @@ class AddCommentEvent extends TaskEvent {
   AddCommentEvent(this.taskId, this.comment);
 }
 
+class UpdateTaskStatus extends TaskEvent {
+  final String taskId;
+  final bool isCompleted;
+
+  UpdateTaskStatus({required this.taskId, required this.isCompleted});
+}
+
 // States
 abstract class TaskState {}
 
@@ -63,11 +70,12 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
     });
 
     on<UpdateTaskEvent>((event, emit) async {
-      if (state is TasksLoaded) {
-        final currentState = state as TasksLoaded;
+      try {
         await _taskRepository.updateTask(event.task);
-        final updatedTasks = await _taskRepository.getTasks();
-        emit(TasksLoaded(updatedTasks, currentState.currentUser));
+      } catch (e) {
+        emit(TaskError('Failed to update task: Insufficient permissions'));
+        // Reload the tasks to ensure UI is in sync with server
+        add(LoadTasksEvent());
       }
     });
 
@@ -103,6 +111,27 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
         await _taskRepository.addComment(event.taskId, event.comment);
         final updatedTasks = await _taskRepository.getTasks();
         emit(TasksLoaded(updatedTasks, currentState.currentUser));
+      }
+    });
+
+    on<UpdateTaskStatus>((event, emit) async {
+      if (state is TasksLoaded) {
+        try {
+          final currentState = state as TasksLoaded;
+          final task = currentState.tasks.firstWhere((t) => t.id == event.taskId);
+          
+          // Create updated task with all existing properties
+          final updatedTask = task.copyWith(
+            isCompleted: event.isCompleted,
+          );
+          
+          await _taskRepository.updateTask(updatedTask);
+          final updatedTasks = await _taskRepository.getTasks();
+          emit(TasksLoaded(updatedTasks, currentState.currentUser));
+        } catch (e) {
+          emit(TaskError('Failed to update task status: $e'));
+          add(LoadTasksEvent()); // Reload tasks to sync with server
+        }
       }
     });
   }

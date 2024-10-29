@@ -68,11 +68,13 @@ class Task {
 
 class Comment {
   final String userId;
+  final String userName;
   final String text;
   final DateTime timestamp;
 
   Comment({
     required this.userId,
+    required this.userName,
     required this.text,
     required this.timestamp,
   });
@@ -80,6 +82,7 @@ class Comment {
   factory Comment.fromMap(Map<String, dynamic> map) {
     return Comment(
       userId: map['userId'],
+      userName: map['userName'] ?? 'Anonymous',
       text: map['text'],
       timestamp: (map['timestamp'] as Timestamp).toDate(),
     );
@@ -88,6 +91,7 @@ class Comment {
   Map<String, dynamic> toMap() {
     return {
       'userId': userId,
+      'userName': userName,
       'text': text,
       'timestamp': Timestamp.fromDate(timestamp),
     };

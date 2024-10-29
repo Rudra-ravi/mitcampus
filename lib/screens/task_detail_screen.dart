@@ -3,30 +3,78 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mitcampus/blocs/task_bloc.dart';
 import 'package:mitcampus/models/task.dart';
 import 'package:mitcampus/screens/create_task_screen.dart';
+import 'package:mitcampus/repositories/user_repository.dart';
+import 'package:mitcampus/blocs/auth_bloc.dart';
 
-class TaskDetailScreen extends StatelessWidget {
+class TaskDetailScreen extends StatefulWidget {
   final Task task;
   final bool isHOD;
 
   const TaskDetailScreen({super.key, required this.task, required this.isHOD});
 
   @override
+  State<TaskDetailScreen> createState() => _TaskDetailScreenState();
+}
+
+class _TaskDetailScreenState extends State<TaskDetailScreen> {
+  final UserRepository _userRepository = UserRepository();
+  Map<String, String> _userNames = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserNames();
+  }
+
+  Future<void> _loadUserNames() async {
+    try {
+      final users = await _userRepository.getAllUsers();
+      final userMap = {for (var user in users) user.id: user.displayName};
+      setState(() {
+        _userNames = userMap;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading user names: $e')),
+        );
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(task.title, style: const TextStyle(color: Colors.white)),
+        title: Text(widget.task.title, style: const TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF2563EB),
         iconTheme: const IconThemeData(color: Colors.white),
-        actions: isHOD ? [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () => _navigateToEditTask(context),
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () => _confirmDeleteTask(context),
-          ),
-        ] : null,
+        actions: [
+          if (!widget.isHOD)
+            IconButton(
+              icon: Icon(
+                widget.task.isCompleted ? Icons.check_circle : Icons.circle_outlined,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                final updatedTask = widget.task.copyWith(
+                  isCompleted: !widget.task.isCompleted
+                );
+                context.read<TaskBloc>().add(UpdateTaskEvent(updatedTask));
+                Navigator.pop(context); // Go back to refresh the list
+              },
+            ),
+          if (widget.isHOD) ...[
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () => _navigateToEditTask(context),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () => _confirmDeleteTask(context),
+            ),
+          ],
+        ],
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -41,25 +89,25 @@ class TaskDetailScreen extends StatelessWidget {
           children: [
             _buildInfoCard(
               title: 'Deadline',
-              content: _formatDate(task.deadline),
+              content: _formatDate(widget.task.deadline),
               icon: Icons.calendar_today,
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
               title: 'Description',
-              content: task.description ?? "No description",
+              content: widget.task.description ?? "No description",
               icon: Icons.description,
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
               title: 'Status',
-              content: task.isCompleted ? 'Completed' : 'Pending',
-              icon: task.isCompleted ? Icons.check_circle : Icons.pending,
+              content: widget.task.isCompleted ? 'Completed' : 'Pending',
+              icon: widget.task.isCompleted ? Icons.check_circle : Icons.pending,
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
               title: 'Assigned Users',
-              content: task.assignedUsers.join(", "),
+              content: widget.task.assignedUsers.map((id) => _userNames[id] ?? '').join(", "),
               icon: Icons.people,
             ),
             const SizedBox(height: 16),
@@ -82,8 +130,8 @@ class TaskDetailScreen extends StatelessWidget {
                       ),
                     ),
                     const Divider(),
-                    ...task.comments.map((comment) => CommentWidget(comment: comment)),
-                    AddCommentWidget(taskId: task.id ?? ''),
+                    ...widget.task.comments.map((comment) => CommentWidget(comment: comment)),
+                    AddCommentWidget(taskId: widget.task.id ?? ''),
                   ],
                 ),
               ),
@@ -93,8 +141,6 @@ class TaskDetailScreen extends StatelessWidget {
       ),
     );
   }
-
-  // ... Add these new methods ...
 
   Widget _buildInfoCard({
     required String title,
@@ -150,7 +196,7 @@ class TaskDetailScreen extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => CreateTaskScreen(taskToEdit: task),
+        builder: (context) => CreateTaskScreen(taskToEdit: widget.task),
       ),
     );
   }
@@ -170,7 +216,7 @@ class TaskDetailScreen extends StatelessWidget {
             TextButton(
               child: const Text('Delete', style: TextStyle(color: Colors.red)),
               onPressed: () {
-                context.read<TaskBloc>().add(DeleteTaskEvent(task.id!));
+                context.read<TaskBloc>().add(DeleteTaskEvent(widget.task.id!));
                 Navigator.of(context).pop(); // Close dialog
                 Navigator.of(context).pop(); // Go back to task list
               },
@@ -189,10 +235,42 @@ class CommentWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(comment.text),
-      subtitle: Text('By: ${comment.userId} at ${comment.timestamp.toString()}'),
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              comment.text,
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'By: ${comment.userName} • ${_formatDateTime(comment.timestamp)}',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
+  }
+
+  String _formatDateTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inDays == 0) {
+      return 'Today ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
+    } else if (difference.inDays == 1) {
+      return 'Yesterday ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
+    } else {
+      return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}';
+    }
   }
 }
 
@@ -210,31 +288,39 @@ class AddCommentWidgetState extends State<AddCommentWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: TextField(
-            controller: _commentController,
-            decoration: const InputDecoration(
-              hintText: 'Add a comment...',
-            ),
-          ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.send),
-          onPressed: () {
-            if (_commentController.text.isNotEmpty) {
-              final comment = Comment(
-                userId: 'current_user_id', // Replace with actual user ID
-                text: _commentController.text,
-                timestamp: DateTime.now(),
-              );
-              context.read<TaskBloc>().add(AddCommentEvent(widget.taskId, comment));
-              _commentController.clear();
-            }
-          },
-        ),
-      ],
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        if (authState is AuthSuccess) {
+          return Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _commentController,
+                  decoration: const InputDecoration(
+                    hintText: 'Add a comment...',
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.send),
+                onPressed: () {
+                  if (_commentController.text.isNotEmpty) {
+                    final comment = Comment(
+                      userId: authState.user.uid,
+                      userName: authState.user.displayName ?? authState.user.email?.split('@')[0] ?? 'Anonymous',
+                      text: _commentController.text,
+                      timestamp: DateTime.now(),
+                    );
+                    context.read<TaskBloc>().add(AddCommentEvent(widget.taskId, comment));
+                    _commentController.clear();
+                  }
+                },
+              ),
+            ],
+          );
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 

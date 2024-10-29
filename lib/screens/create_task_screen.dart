@@ -412,9 +412,3 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
     );
   }
 }
-
-
-
-extension on Object? {
-  get displayName => null;
-}

@@ -18,7 +18,24 @@ class TaskRepository {
   }
 
   Future<void> updateTask(Task task) async {
-    await _firestore.collection('tasks').doc(task.id).update(task.toFirestore());
+    try {
+      if (task.id == null) {
+        throw Exception('Task ID cannot be null');
+      }
+      
+      await _firestore.runTransaction((transaction) async {
+        final docRef = _firestore.collection('tasks').doc(task.id);
+        final docSnapshot = await transaction.get(docRef);
+        
+        if (!docSnapshot.exists) {
+          throw Exception('Task does not exist');
+        }
+        
+        transaction.update(docRef, task.toFirestore());
+      });
+    } catch (e) {
+      throw Exception('Failed to update task: $e');
+    }
   }
 
   Future<Task> createTask(Task task) async {
@@ -42,9 +59,22 @@ class TaskRepository {
   }
 
   Future<void> addComment(String taskId, Comment comment) async {
-    await _firestore.collection('tasks').doc(taskId).update({
-      'comments': FieldValue.arrayUnion([comment.toMap()])
-    });
+    try {
+      await _firestore.runTransaction((transaction) async {
+        final docRef = _firestore.collection('tasks').doc(taskId);
+        final docSnapshot = await transaction.get(docRef);
+        
+        if (!docSnapshot.exists) {
+          throw Exception('Task does not exist');
+        }
+        
+        transaction.update(docRef, {
+          'comments': FieldValue.arrayUnion([comment.toMap()])
+        });
+      });
+    } catch (e) {
+      throw Exception('Failed to add comment: $e');
+    }
   }
 
   Future<List<Task>> getTasksForUser(String userId) async {

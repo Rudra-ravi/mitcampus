@@ -37,7 +37,11 @@ class TaskScreen extends StatelessWidget {
                     ? const Center(
                         child: Text('No tasks available',
                           style: TextStyle(color: Colors.white, fontSize: 16)))
-                    : ListView.builder(
+                    : RefreshIndicator(
+                      onRefresh: () async {
+                        context.read<TaskBloc>().add(LoadTasksEvent());
+                      },
+                      child: ListView.builder(
                         padding: const EdgeInsets.all(16),
                         itemCount: state.tasks.length,
                         itemBuilder: (context, index) {
@@ -47,7 +51,26 @@ class TaskScreen extends StatelessWidget {
                             isHOD: state.currentUser.isHOD,
                           );
                         },
-                      );
+                      ),
+                    );
+              } else if (state is TaskError) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        state.message,
+                        style: const TextStyle(color: Colors.white, fontSize: 16),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => context.read<TaskBloc>().add(LoadTasksEvent()),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                );
               } else {
                 return const Center(
                   child: Text('Error loading tasks. Please try again later.',
@@ -97,29 +120,70 @@ class TaskListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      elevation: 4,
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: ListTile(
-        title: Text(
-          task.title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: task.isCompleted 
+                ? [Colors.green.withOpacity(0.1), Colors.green.withOpacity(0.05)]
+                : [Colors.blue.withOpacity(0.1), Colors.blue.withOpacity(0.05)],
+          ),
         ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Deadline: ${_formatDate(task.deadline)}'),
-            Text(
-              'Status: ${task.isCompleted ? "Completed" : "Pending"}',
-              style: TextStyle(
-                color: task.isCompleted ? Colors.green : Colors.orange,
+        child: ListTile(
+          title: Text(
+            task.title,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Deadline: ${_formatDate(task.deadline)}'),
+              Text(
+                'Status: ${task.isCompleted ? "Completed" : "Pending"}',
+                style: TextStyle(
+                  color: task.isCompleted ? Colors.green : Colors.orange,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (!isHOD)
+                IconButton(
+                  icon: Icon(
+                    task.isCompleted ? Icons.check_circle : Icons.circle_outlined,
+                    color: task.isCompleted ? Colors.green : Colors.grey,
+                  ),
+                  onPressed: () {
+                    final updatedTask = task.copyWith(isCompleted: !task.isCompleted);
+                    context.read<TaskBloc>().add(UpdateTaskEvent(updatedTask));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(task.isCompleted 
+                            ? 'Task marked as pending' 
+                            : 'Task marked as completed'),
+                        backgroundColor: task.isCompleted ? Colors.orange : Colors.green,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                ),
+              IconButton(
+                icon: const Icon(Icons.arrow_forward_ios, size: 16),
+                onPressed: () => _navigateToTaskDetail(context),
+              ),
+            ],
+          ),
+          onTap: () => _navigateToTaskDetail(context),
         ),
-        trailing: Icon(
-          task.isCompleted ? Icons.check_circle : Icons.circle_outlined,
-          color: task.isCompleted ? Colors.green : Colors.grey,
-        ),
-        onTap: () => _navigateToTaskDetail(context),
       ),
     );
   }
