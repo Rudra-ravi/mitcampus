@@ -4,12 +4,14 @@ class User {
   final String id;
   final String email;
   final bool isHOD;
+  final String displayName;
 
   User({
     required this.id,
     required this.email,
     required this.isHOD,
-  });
+    String? displayName,
+  }) : displayName = displayName ?? email.split('@')[0];
 
   factory User.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
@@ -17,6 +19,7 @@ class User {
       id: doc.id,
       email: data['email'],
       isHOD: data['email'] == 'hodece@mvit.edu.in',
+      displayName: data['displayName'],
     );
   }
 
@@ -24,6 +27,7 @@ class User {
     return {
       'email': email,
       'isHOD': isHOD,
+      'displayName': displayName,
     };
   }
 }
