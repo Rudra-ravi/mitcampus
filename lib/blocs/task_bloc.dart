@@ -125,9 +125,13 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
           final currentState = state as TasksLoaded;
           final task = currentState.tasks.firstWhere((t) => t.id == event.taskId);
           
-          // Create updated task with all existing properties
+          // Update user completion status
+          final updatedCompletions = Map<String, bool>.from(task.userCompletions);
+          updatedCompletions[currentState.currentUser.id] = event.isCompleted;
+          
+          // Create updated task
           final updatedTask = task.copyWith(
-            isCompleted: event.isCompleted,
+            userCompletions: updatedCompletions,
           );
           
           await _taskRepository.updateTask(updatedTask);
@@ -135,7 +139,7 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
           emit(TasksLoaded(updatedTasks, currentState.currentUser));
         } catch (e) {
           emit(TaskError('Failed to update task status: $e'));
-          add(LoadTasksEvent()); // Reload tasks to sync with server
+          add(LoadTasksEvent());
         }
       }
     });

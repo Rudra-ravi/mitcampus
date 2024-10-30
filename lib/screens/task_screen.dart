@@ -49,6 +49,7 @@ class TaskScreen extends StatelessWidget {
                           return TaskListItem(
                             task: task,
                             isHOD: state.currentUser.isHOD,
+                            currentUserId: state.currentUser.id,
                           );
                         },
                       ),
@@ -110,15 +111,20 @@ class TaskScreen extends StatelessWidget {
 class TaskListItem extends StatelessWidget {
   final Task task;
   final bool isHOD;
+  final String currentUserId;
 
   const TaskListItem({
     super.key,
     required this.task,
     required this.isHOD,
+    required this.currentUserId,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isUserCompleted = task.userCompletions[currentUserId] ?? false;
+    final showAsCompleted = isHOD ? task.isFullyCompleted : isUserCompleted;
+    
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -138,46 +144,62 @@ class TaskListItem extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: task.isCompleted 
-                  ? [Colors.green.withOpacity(0.15), Colors.green.withOpacity(0.05)]
-                  : [Colors.white, Colors.white],
+              colors: _getBackgroundColors(isUserCompleted, task.isFullyCompleted),
             ),
           ),
           child: ListTile(
             title: Text(
               task.title,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                decoration: showAsCompleted ? TextDecoration.lineThrough : null,
+              ),
             ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Deadline: ${_formatDate(task.deadline)}'),
                 Text(
-                  'Status: ${task.isCompleted ? "Completed" : "Pending"}',
+                  isHOD 
+                    ? 'Status: ${task.isFullyCompleted ? "Completed" : "Pending"}'
+                    : 'Your Status: ${isUserCompleted ? "Completed" : "Pending"}',
                   style: TextStyle(
-                    color: task.isCompleted ? Colors.green : Colors.orange,
+                    color: showAsCompleted ? Colors.green : Colors.orange,
                   ),
+                ),
+                if (isHOD) Text(
+                  'Completed by ${task.userCompletions.values.where((completed) => completed).length}/${task.assignedUsers.length} users',
+                  style: const TextStyle(fontSize: 12),
                 ),
               ],
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (!isHOD)
+                if (!isHOD && task.assignedUsers.contains(currentUserId))
                   IconButton(
                     icon: Icon(
-                      task.isCompleted ? Icons.check_circle : Icons.circle_outlined,
-                      color: task.isCompleted ? Colors.green : Colors.grey,
+                      isUserCompleted ? Icons.check_circle : Icons.circle_outlined,
+                      color: isUserCompleted ? Colors.green : Colors.grey,
                     ),
                     onPressed: () {
-                      final updatedTask = task.copyWith(isCompleted: !task.isCompleted);
+                      final updatedCompletions = Map<String, bool>.from(task.userCompletions);
+                      updatedCompletions[currentUserId] = !isUserCompleted;
+                      
+                      final updatedTask = task.copyWith(
+                        userCompletions: updatedCompletions,
+                        isCompleted: task.assignedUsers.every(
+                          (userId) => updatedCompletions[userId] == true
+                        ),
+                      );
+                      
                       context.read<TaskBloc>().add(UpdateTaskEvent(updatedTask));
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(task.isCompleted 
-                              ? 'Task marked as pending' 
-                              : 'Task marked as completed'),
-                          backgroundColor: task.isCompleted ? Colors.orange : Colors.green,
+                          content: Text(isUserCompleted 
+                            ? 'Task marked as pending' 
+                            : 'Task marked as completed'),
+                          backgroundColor: isUserCompleted ? Colors.orange : Colors.green,
                           behavior: SnackBarBehavior.floating,
                         ),
                       );
@@ -194,6 +216,31 @@ class TaskListItem extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  List<Color> _getBackgroundColors(bool isUserCompleted, bool isFullyCompleted) {
+    if (isHOD) {
+      if (isFullyCompleted) {
+        return [
+          Colors.green.withOpacity(0.3),
+          Colors.green.withOpacity(0.2)
+        ];
+      }
+      return [Colors.white, Colors.white];
+    } else {
+      if (isFullyCompleted) {
+        return [
+          Colors.green.withOpacity(0.3),
+          Colors.green.withOpacity(0.2)
+        ];
+      } else if (isUserCompleted) {
+        return [
+          Colors.green.withOpacity(0.15),
+          Colors.green.withOpacity(0.05)
+        ];
+      }
+      return [Colors.white, Colors.white];
+    }
   }
 
   String _formatDate(DateTime date) {

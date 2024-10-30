@@ -8,6 +8,7 @@ class Task {
   final String? description;
   final List<String> assignedUsers;
   final List<Comment> comments;
+  final Map<String, bool> userCompletions;
 
   Task({
     this.id,
@@ -17,7 +18,8 @@ class Task {
     this.description,
     required this.assignedUsers,
     required this.comments,
-  });
+    Map<String, bool>? userCompletions,
+  }) : userCompletions = userCompletions ?? {};
 
   Task copyWith({
     String? id,
@@ -27,6 +29,7 @@ class Task {
     String? description,
     List<String>? assignedUsers,
     List<Comment>? comments,
+    Map<String, bool>? userCompletions,
   }) {
     return Task(
       id: id ?? this.id,
@@ -36,21 +39,30 @@ class Task {
       description: description ?? this.description,
       assignedUsers: assignedUsers ?? this.assignedUsers,
       comments: comments ?? this.comments,
+      userCompletions: userCompletions ?? this.userCompletions,
     );
   }
 
   factory Task.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    Map<String, bool> userCompletions = {};
+    if (data['userCompletions'] != null) {
+      data['userCompletions'].forEach((key, value) {
+        userCompletions[key] = value as bool;
+      });
+    }
+    
     return Task(
       id: doc.id,
       title: data['title'] ?? '',
       deadline: (data['deadline'] as Timestamp).toDate(),
-      isCompleted: data['isCompleted'] ?? false,
+      isCompleted: false,
       description: data['description'],
       assignedUsers: List<String>.from(data['assignedUsers'] ?? []),
       comments: (data['comments'] as List<dynamic>? ?? [])
           .map((comment) => Comment.fromMap(comment))
           .toList(),
+      userCompletions: userCompletions,
     );
   }
 
@@ -62,8 +74,13 @@ class Task {
       'description': description,
       'assignedUsers': assignedUsers,
       'comments': comments.map((comment) => comment.toMap()).toList(),
+      'userCompletions': userCompletions,
     };
   }
+
+  bool get isFullyCompleted => 
+    assignedUsers.isNotEmpty && 
+    assignedUsers.every((userId) => userCompletions[userId] == true);
 }
 
 class Comment {

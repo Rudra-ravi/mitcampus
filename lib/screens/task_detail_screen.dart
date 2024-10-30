@@ -105,11 +105,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               icon: widget.task.isCompleted ? Icons.check_circle : Icons.pending,
             ),
             const SizedBox(height: 16),
-            _buildInfoCard(
-              title: 'Assigned Users',
-              content: widget.task.assignedUsers.map((id) => _userNames[id] ?? '').join(", "),
-              icon: Icons.people,
-            ),
+            _buildAssignedUsersCard(),
             const SizedBox(height: 16),
             Card(
               elevation: 4,
@@ -147,6 +143,55 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     required String content,
     required IconData icon,
   }) {
+    if (title == 'Status') {
+      final completedCount = widget.task.userCompletions.values.where((v) => v).length;
+      final totalCount = widget.task.assignedUsers.length;
+      
+      return Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(icon, color: const Color(0xFF2563EB)),
+                  const SizedBox(width: 16),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2563EB),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                widget.isHOD
+                  ? 'Overall: ${widget.task.isFullyCompleted ? "Completed" : "Pending"}'
+                  : 'Your Status: ${widget.task.userCompletions[context.read<AuthBloc>().state.user.uid] ?? false ? "Completed" : "Pending"}',
+                style: TextStyle(
+                  color: widget.task.isFullyCompleted ? Colors.green : Colors.orange,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Progress: $completedCount/$totalCount users completed',
+                style: const TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    
+    // Return regular info card for other types
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(
@@ -224,6 +269,68 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildAssignedUsersCard() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.people, color: Color(0xFF2563EB)),
+                SizedBox(width: 16),
+                Text(
+                  'Assigned Users',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2563EB),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ...widget.task.assignedUsers.map((userId) {
+              final userName = _userNames[userId] ?? 'Unknown User';
+              final isCompleted = widget.task.userCompletions[userId] ?? false;
+              
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(userName),
+                    Row(
+                      children: [
+                        Icon(
+                          isCompleted ? Icons.check_circle : Icons.pending,
+                          color: isCompleted ? Colors.green : Colors.orange,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          isCompleted ? 'Completed' : 'Pending',
+                          style: TextStyle(
+                            color: isCompleted ? Colors.green : Colors.orange,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -330,3 +437,4 @@ class AddCommentWidgetState extends State<AddCommentWidget> {
     super.dispose();
   }
 }
+
