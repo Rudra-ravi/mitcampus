@@ -84,4 +84,14 @@ class TaskRepository {
         .get();
     return snapshot.docs.map((doc) => Task.fromFirestore(doc)).toList();
   }
+
+  Stream<List<Task>> getTasksStream() {
+    return _firestore
+        .collection(_collection)
+        .orderBy('deadline')
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => Task.fromFirestore(doc))
+            .toList());
+  }
 }

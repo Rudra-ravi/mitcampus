@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 import '../models/chat_message.dart';
+import '../services/notification_service.dart';
 
 // Events
 abstract class ChatEvent extends Equatable {
@@ -59,10 +62,33 @@ class ChatError extends ChatState {
 // Bloc
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final NotificationService _notificationService = NotificationService();
+  StreamSubscription? _messagesSubscription;
 
   ChatBloc() : super(ChatInitial()) {
     on<LoadMessagesEvent>(_onLoadMessages);
     on<SendMessageEvent>(_onSendMessage);
+    // Add this to listen for new messages
+    _messagesSubscription = _firestore
+        .collection('messages')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .listen((snapshot) {
+      if (state is ChatLoaded) {
+        final currentMessages = (state as ChatLoaded).messages;
+        final newMessages = snapshot.docChanges
+            .where((change) => change.type == DocumentChangeType.added)
+            .map((change) => ChatMessage.fromMap(
+                change.doc.data() as Map<String, dynamic>))
+            .where((message) => !currentMessages
+                .any((currentMessage) => currentMessage.id == message.id))
+            .toList();
+
+        for (var message in newMessages) {
+          _showMessageNotification(message);
+        }
+      }
+    });
   }
 
   Future<void> _onLoadMessages(LoadMessagesEvent event, Emitter<ChatState> emit) async {
@@ -98,5 +124,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     } catch (e) {
       emit(ChatError(error: e.toString()));
     }
+  }
+  Future<void> _showMessageNotification(ChatMessage message) async {
+    await _notificationService.showNotification(
+      title: 'New Message from ${message.senderName}',
+      body: message.message,
+    );
+  }
+
+  @override
+  Future<void> close() {
+    _messagesSubscription?.cancel();
+    return super.close();
   }
 }

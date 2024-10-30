@@ -10,12 +10,17 @@ import 'package:mitcampus/firebase_options.dart';
 import 'package:mitcampus/screens/home_screen.dart';
 import 'blocs/chat_bloc.dart';
 import 'blocs/task_bloc.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  
+  // Initialize notification service
+  final notificationService = NotificationService();
+  await notificationService.initialize();
   
   runApp(const MyApp());
 }

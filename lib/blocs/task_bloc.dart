@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mitcampus/models/task.dart';
 import 'package:mitcampus/models/user.dart';
 import 'package:mitcampus/repositories/task_repository.dart';
 import 'package:mitcampus/repositories/user_repository.dart';
+import 'package:mitcampus/services/notification_service.dart';
 
 // Events
 abstract class TaskEvent {}
@@ -56,6 +59,8 @@ class TaskError extends TaskState {
 class TaskBloc extends Bloc<TaskEvent, TaskState> {
   final TaskRepository _taskRepository = TaskRepository();
   final UserRepository _userRepository = UserRepository();
+  final NotificationService _notificationService = NotificationService();
+  StreamSubscription? _tasksSubscription;
 
   TaskBloc() : super(TasksLoading()) {
     on<LoadTasksEvent>((event, emit) async {
@@ -134,5 +139,32 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
         }
       }
     });
+
+    // Update the stream subscription to use snapshots
+    _tasksSubscription = _taskRepository.getTasksStream().listen((tasks) {
+      if (state is TasksLoaded) {
+        final currentTasks = (state as TasksLoaded).tasks;
+        final newTasks = tasks.where((task) => 
+          !currentTasks.any((currentTask) => currentTask.id == task.id)).toList();
+        
+        for (var task in newTasks) {
+          _showTaskNotification(task);
+        }
+      }
+      add(LoadTasksEvent());
+    });
+  }
+
+  Future<void> _showTaskNotification(Task task) async {
+    await _notificationService.showNotification(
+      title: 'New Task Assigned',
+      body: 'Task: ${task.title}',
+    );
+  }
+
+  @override
+  Future<void> close() {
+    _tasksSubscription?.cancel();
+    return super.close();
   }
 }
